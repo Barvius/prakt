@@ -4,8 +4,8 @@
 #include "stdafx.h"
 #include <stdlib.h>
 #include <conio.h>
-#include <locale.h>
 #include <string.h>
+#include <windows.h>
 
 typedef struct Student {
 	char LastName[21] = { NULL };
@@ -20,14 +20,16 @@ typedef struct Node {
 	struct Node *next;
 } Node;
 
-void push(Node **head, Student value) {
+// вспомогательные функции для работы со списком
+
+void push(Node **head, Student value) { // создание первого элемента
 	Node *tmp = (Node*)malloc(sizeof(Node));
 	tmp->value = value;
 	tmp->next = (*head);
 	(*head) = tmp;
 }
 
-Student pop(Node **head) {
+Student pop(Node **head) { // удаление первого элемента
 	Node* prev = NULL;
 	Student val;
 	if (head == NULL) {
@@ -40,7 +42,79 @@ Student pop(Node **head) {
 	return val;
 }
 
-void ShowRecords(Node *head) {
+Node *getLast(Node *head) { // получение последнего элемента
+	if (head == NULL) {
+		return NULL;
+	}
+	while (head->next) {
+		head = head->next;
+	}
+	return head;
+}
+
+void pushBack(Node **head, Student value) { // запись в конец списка
+	Node *last = getLast(*head);
+	if (last) {
+		Node *tmp = (Node*)malloc(sizeof(Node));
+		tmp->value = value;
+		tmp->next = NULL;
+		last->next = tmp;
+	} else {
+		push(head, value);
+	}
+}
+
+Node *getNth(Node* head, int n) { // получение элемента по индексу
+	int counter = 0;
+	while (counter < n && head) {
+		head = head->next;
+		counter++;
+	}
+	return head;
+}
+
+Student deleteNth(Node **head, int n) { // удаление элемента по индексу
+	if (n == 0) {
+		return pop(head);
+	} else {
+		Node *prev = getNth(*head, n - 1);
+		Node *elm = prev->next;
+		Student val = elm->value;
+		prev->next = elm->next;
+		free(elm);
+		return val;
+	}
+}
+
+void deleteList(Node **head) { // удаление всего списка
+	Node* prev = NULL;
+	while ((*head)->next) {
+		prev = (*head);
+		(*head) = (*head)->next;
+		free(prev);
+	}
+	free(*head);
+}
+
+// вспомогательные функции для работы со списком
+
+void ReadDb(Node **head) { // чтение бд
+	FILE *f;
+	Student tmp;
+	if (!(f = fopen("db.txt", "r"))) {
+		printf("Файл не найден....\n");
+		system("pause");
+		exit(0);
+	} else {
+		while (fscanf(f, "%s %s %s %d %d %d %d %d\n", tmp.LastName, tmp.FirstName, tmp.Group, &tmp.score[0], &tmp.score[1], &tmp.score[2], &tmp.score[3], &tmp.score[4]) != EOF) {
+			tmp.s_score = (tmp.score[0] + tmp.score[1] + tmp.score[2] + tmp.score[3] + tmp.score[4]) / 5.0;
+			pushBack(head, tmp);
+		}
+	}
+	fclose(f);
+}
+
+void ShowRecords(Node *head) { // печать списка
 	system("cls");
 	printf("Список студентов\n");
 	printf("------------------------\n");
@@ -57,97 +131,7 @@ void ShowRecords(Node *head) {
 	printf("\n");
 }
 
-/*
-void fromArray(Node **head, int *arr, size_t size) {
-	size_t i = size - 1;
-	if (arr == NULL || size == 0) {
-		return;
-	}
-	do {
-		push(head, arr[i]);
-	} while (i-- != 0);
-}
-*/
-
-Node* getLast(Node *head) {
-	if (head == NULL) {
-		return NULL;
-	}
-	while (head->next) {
-		head = head->next;
-	}
-	return head;
-}
-
-void pushBack(Node *&head, Student value) {
-	Node *last = getLast(head);
-	Node *tmp = (Node*)malloc(sizeof(Node));
-	if (last) { // если этот элемент не первый 
-		tmp->value = value;
-		tmp->next = NULL;
-		last->next = tmp;
-	}
-	else { // если структура пустая то создадим первый
-		tmp->value = value;
-		tmp->next = (head);
-		(head) = tmp;
-	}
-
-}
-
-
-Node* getNth(Node* head, int n) {
-	int counter = 0;
-	while (counter < n && head) {
-		head = head->next;
-		counter++;
-	}
-	return head;
-}
-
-Student deleteNth(Node **head, int n) {
-	if (n == 0) {
-		return pop(head);
-	}
-	else {
-		Node *prev = getNth(*head, n - 1);
-		Node *elm = prev->next;
-		Student val = elm->value;
-		prev->next = elm->next;
-		free(elm);
-		return val;
-	}
-}
-
-
-void deleteList(Node **head) {
-	Node* prev = NULL;
-	while ((*head)->next) {
-		prev = (*head);
-		(*head) = (*head)->next;
-		free(prev);
-	}
-	free(*head);
-}
-
-void ReadDb(Node *&head) {
-	FILE *f;
-	Student tmp;
-	if (!(f = fopen("db.txt", "r"))) {
-		printf("Файл не найден....\n");
-		system("pause");
-		exit(0);
-	}
-	else {
-		while (fscanf(f, "%s %s %s %d %d %d %d %d\n", tmp.LastName, tmp.FirstName, tmp.Group, &tmp.score[0], &tmp.score[1], &tmp.score[2], &tmp.score[3], &tmp.score[4]) != EOF) {
-			tmp.s_score = (tmp.score[0] + tmp.score[1] + tmp.score[2] + tmp.score[3] + tmp.score[4]) / 5.0;
-			pushBack(head, tmp);
-		}
-		fclose(f);
-	}
-}
-
-void ShowFiltredList(Node *head) {
+void FiltredList(Node *head) { // сортировка по группе
 	Node * p = NULL;
 	if (head != NULL) {
 		while (head->next != NULL) {
@@ -165,7 +149,7 @@ void ShowFiltredList(Node *head) {
 	}
 }
 
-void ShowGodStudents(Node *head) {
+void ShowGodStudents(Node *head) { // студенты с средним баллом > 4
 	system("cls");
 	printf("Студенты с средним баллом > 4\n");
 	printf("-----------------------------\n");
@@ -181,7 +165,7 @@ void ShowGodStudents(Node *head) {
 		head = head->next;
 	}
 	printf("+----+----------------------+--------+\n");
-	if(!i){
+	if (!i) {
 		system("cls");
 		printf("Студенты с средним баллом > 4\n");
 		printf("-----------------------------\n");
@@ -189,7 +173,7 @@ void ShowGodStudents(Node *head) {
 	}
 }
 
-void AddRecords(Node *head) {
+void AddRecords(Node **head) { // добавление новой записи
 	system("cls");
 	Student NewStudent;
 	printf("Добавление новой записи\n");
@@ -210,26 +194,28 @@ void AddRecords(Node *head) {
 	scanf("%d", &NewStudent.score[3]);
 	printf("\nПятая оценка:  ");
 	scanf("%d", &NewStudent.score[4]);
+	NewStudent.s_score = (NewStudent.score[0] + NewStudent.score[1] + NewStudent.score[2] + NewStudent.score[3] + NewStudent.score[4]) / 5.0;
 	pushBack(head, NewStudent);
 }
 
-void DelRecords(Node *head) {
+void DelRecords(Node **head) { // удаление записи
 	system("cls");
 	printf("Удаление записи\n");
 	printf("---------------\n");
 	int rm_row;
-	ShowRecords(head);
+	ShowRecords(*head);
 	printf("Введите ID удаляемой записи\n");
 	scanf("%d", &rm_row);
-	deleteNth(&head, rm_row);
+	Student rm = deleteNth(head, rm_row);
 	printf("Запись с ID %d устпешно удалена\n", rm_row);
+	printf("%s \n", rm.LastName);
 }
 
-void preexit(Node *head) {
-	system("cls");
+void preexit(Node *head) { // вопрос о сохранении измененного списка в файл
+	system("cls"); 
 	printf("Сохранить изменение в файле? y/n\n");
 	FILE *f;
-	switch (_getch()){
+	switch (_getch()) {
 	case 'y':
 		f = fopen("db.txt", "w");
 		while (head) {
@@ -244,10 +230,12 @@ void preexit(Node *head) {
 }
 
 int main() {
-	setlocale(0, "rus");
+	SetConsoleCP(1251);
+	SetConsoleOutputCP(1251);
+	system("color F0");
 	Node* head = NULL;
-	ReadDb(head);
-	while (true){
+	ReadDb(&head);
+	while (true) {
 		system("cls");
 		printf("Выберите действие:\n");
 		printf("------------------\n");
@@ -258,42 +246,43 @@ int main() {
 		printf("f - Сортировка по названию группы\n");
 		printf("q - Выход\n");
 		printf("\n");
+		switch (_getch()) {
+		case 'l':
+			ShowRecords(head);
+			break;
+		case 'a':
+			AddRecords(&head);
+			break;
+		case 'd':
+			DelRecords(&head);
+			break;
+		case 's':
+			ShowGodStudents(head);
+			break;
+		case 'f':
+			FiltredList(head);
+			ShowRecords(head);
+			break;
+		case 'q':
+			preexit(head);
+			exit(0);
+			break;
+		}
+		printf("-------------------------------------\n");
+		printf("Для возврата в главное меню нажмите m\n");
+		printf("Для выхода нажмите q\n");
+		bool w = true;
+		while (w) {
 			switch (_getch()) {
-			case 'l':
-				ShowRecords(head);
-				break;
-			case 'a':
-				AddRecords(head);
-				break;
-			case 'd':
-				DelRecords(head);
-				break;
-			case 's':
-				ShowGodStudents(head);
-				break;
-			case 'f':
-				ShowFiltredList(head);
+			case 'm':
+				w = false;
 				break;
 			case 'q':
 				preexit(head);
 				exit(0);
 				break;
 			}
-			printf("-------------------------------------\n");
-			printf("Для возврата в главное меню нажмите m\n");
-			printf("Для выхода нажмите q\n");
-			bool w = true;
-			while (w) {
-				switch (_getch()) {
-				case 'm':
-					w = false;
-					break;
-				case 'q':
-					preexit(head);
-					exit(0);
-					break;
-				}
-			}
+		}
 	}
 	deleteList(&head);
 	return 0;
