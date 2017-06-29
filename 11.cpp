@@ -23,7 +23,7 @@ typedef struct Node {
 // вспомогательные функции для работы со списком
 
 void push(Node **head, Student value) { // создание первого элемента
-	Node *tmp = (Node*)malloc(sizeof(Node));
+	Node *tmp = new Node;
 	tmp->value = value;
 	tmp->next = (*head);
 	(*head) = tmp;
@@ -55,7 +55,7 @@ Node *getLast(Node *head) { // получение последнего элем�
 void pushBack(Node **head, Student value) { // запись в конец списка
 	Node *last = getLast(*head);
 	if (last) {
-		Node *tmp = (Node*)malloc(sizeof(Node));
+		Node *tmp = new Node;
 		tmp->value = value;
 		tmp->next = NULL;
 		last->next = tmp;
