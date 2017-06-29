@@ -206,9 +206,8 @@ void DelRecords(Node **head) { // удаление записи
 	ShowRecords(*head);
 	printf("Введите ID удаляемой записи\n");
 	scanf("%d", &rm_row);
-	Student rm = deleteNth(head, rm_row);
+	deleteNth(head, rm_row);
 	printf("Запись с ID %d устпешно удалена\n", rm_row);
-	printf("%s \n", rm.LastName);
 }
 
 void preexit(Node *head) { // вопрос о сохранении измененного списка в файл
